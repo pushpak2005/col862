@@ -1,0 +1,90 @@
+\documentclass[11pt]{book} \usepackage{ppbook}
+
+\begin{document}
+
+\chapter{Introduction to AI-Assisted Program Analysis}
+
+\begin{itemize} \item Software engineering is not just hacking code, it is about
+building and maintaining systems correctly. Core pillars: lifecycle (reqs \to
+design \to impl \to testing/verification \to deploy \to maintenance), QA (static
+analysis, testing, formal methods), and modular design (clean interfaces,
+decoupled modules).
+
+\item Program Analysis (PA): given program $P$, check if property $\phi$ holds for all possible executions ($P \models \phi$). E.g., no divide-by-zero, no null deref.
+
+\item Two ways to do PA:
+\begin{itemize}
+    \item Static: inspect code without running it (compiler data-flow, abstract interpretation, symbolic execution, model checking).
+    \item Dynamic: run the code with inputs (testing, profiling, runtime monitoring, taint analysis).
+\end{itemize}
+
+\item Formal Verification (FV) is basically $\text{Model} + \text{Spec} + \text{Proof}$.
+\begin{itemize}
+    \item Model = semantics of the program.
+    \item Spec = correctness condition we want.
+    \item Proof = solver/prover verifying code matches spec (theorem provers, SMT solvers, model checkers).
+\end{itemize}
+
+\item PA vs FV difference:
+\begin{itemize}
+    \item PA finds facts or properties (e.g., amount affects balance, path counts, checking if there are pointer dereferences).
+    \item FV proves an exact mathematical contract.
+\end{itemize}
+
+\end{itemize}
+
+\begin{ppprogram}{Account withdrawal example}{lst:withdraw}
+\begin{lstlisting}[language=C] int withdraw(int balance, int amount) { if
+(amount <= balance) balance = balance - amount; return balance; }
+\end{lstlisting} \end{ppprogram}
+
+\begin{itemize} \item For the above code, FV requires proving: [ balance \ge 0
+\land amount \ge 0 \implies balance' \ge 0 ] Then using a verification engine to
+discharge the proof.
+
+\item Why are PA and FV so hard?
+\begin{itemize}
+    \item Rice's Theorem: any non-trivial semantic property of programs is undecidable.
+    \item Precision vs scalability tradeoff: higher precision blows up compute.
+    \item Infinite input spaces, exponential path explosion, loops causing infinite traces.
+    \item Real world complexity: pointers, dynamic heap, recursion, concurrency/threads, async callbacks, OS and network calls.
+\end{itemize}
+
+\item Where LLMs can actually help:
+\begin{itemize}
+    \item Spec synthesis: converting English requirements into formal logic (e.g., ``every request eventually gets answered'' $\implies \Box(req \to \Diamond resp)$).
+    \item Invariant inference: guessing loop invariants, pre/post-conditions.
+    \item Auxiliary lemmas: SMT/provers often get stuck on induction (like array sum proofs) and need helper lemmas that LLMs are surprisingly good at proposing.
+    \item Basically: LLMs work as heuristic candidate generators, not as the ground truth.
+\end{itemize}
+
+\item What LLMs are bad at:
+\begin{itemize}
+    \item Can't verify their own output, cannot be used as proof checkers.
+    \item Neither sound (hallucinate non-existent bugs / false positives) nor complete (miss actual violations).
+    \item Bad at strict multi-step formal reasoning; e.g., might handle $\forall x \exists y . R(x,y)$ initially, then flip quantifier order in step 3.
+\end{itemize}
+
+\item Core loop for AI-assisted SE:
+\begin{itemize}
+    \item Property discovery: what to verify.
+    \item Abstraction discovery: what facts to track.
+    \item Proof search: candidate invariants/lemmas.
+    \item Tool orchestration: calling the right SMT/analyzer.
+    \item Principle: Trust but verify. Solver has final say.
+\end{itemize}
+
+\end{itemize}
+
+\begin{ppprogram}{Dafny Demo: Doubling Sum with Loop Invariant}{lst:dafny_sum}
+\begin{lstlisting} // Computes sum of first n even numbers: 2 + 4 + ... + 2n =
+n*(n+1) method DoublingSum(n: nat) returns (s: nat) ensures s == n * (n + 1) {
+var i := 0; s := 0; while i < n invariant 0 <= i <= n invariant s == i * (i + 1)
+{ i := i + 1; s := s + 2 * i; } } \end{lstlisting} \end{ppprogram}
+
+\begin{itemize} \item In Dafny, without the inductive loop invariant \texttt{s
+== i * (i + 1)}, the SMT solver fails to prove postcondition \texttt{s == n * (n
++ 1)} because it cannot unroll loops arbitrarily. This is exactly the kind of
+invariant an LLM can suggest to complete verification. \end{itemize}
+
+\end{document}
