@@ -2,7 +2,7 @@ PDF=book.pdf
 TEX=main.tex
 
 all:
-	latexmk -pdf -interaction=nonstopmode -halt-on-error $(TEX)
+	TEXINPUTS=.:./styles//: latexmk -pdf -interaction=nonstopmode -halt-on-error $(TEX)
 	@cp main.pdf $(PDF)
 
 clean:
