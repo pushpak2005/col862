@@ -1,0 +1,103 @@
+\makeatletter
+\def\input@path{{styles/}{./}}
+\makeatother
+
+% styles/ppbook.sty
+\ProvidesPackage{ppbook}[2026/01/26 Global book styling]
+
+% --- Page geometry ---
+\RequirePackage[
+  paperwidth=6in,paperheight=9in,
+  inner=0.85in,outer=0.70in,top=0.85in,bottom=0.90in,
+  headheight=14pt,headsep=18pt
+]{geometry}
+
+% --- Fonts (pick one set) ---
+\RequirePackage[T1]{fontenc}
+\RequirePackage{lmodern} % safe default, widely available
+\RequirePackage{microtype}
+
+% --- Spacing and paragraphs ---
+\RequirePackage{setspace}
+\onehalfspacing
+\setlength{\parindent}{1.1em}
+\setlength{\parskip}{0pt}
+
+% --- Math, symbols ---
+\RequirePackage{amsmath,amssymb,mathtools}
+
+% --- Colors ---
+\RequirePackage{xcolor}
+\definecolor{PPBlue}{HTML}{1F4E79}
+\definecolor{PPGray}{HTML}{4D4D4D}
+\definecolor{PPLight}{HTML}{F7F8FA}
+\definecolor{PPWarn}{HTML}{7A2E2E}
+\definecolor{PPGood}{HTML}{1F6F43}
+
+% --- Hyperlinks ---
+\RequirePackage[hidelinks]{hyperref}
+\hypersetup{
+  pdftitle={Parallel Programming Book},
+  pdfauthor={},
+  colorlinks=true,
+  linkcolor=PPBlue,
+  urlcolor=PPBlue,
+  citecolor=PPBlue
+}
+
+% --- Headings/section styling ---
+\RequirePackage{titlesec}
+
+% Chapter title: big, clean, with a thin rule
+\titleformat{\chapter}
+  {\normalfont\huge\bfseries\color{PPBlue}}
+  {\thechapter}{0.8em}{}
+\titlespacing*{\chapter}{0pt}{-10pt}{18pt}
+
+% Section titles: consistent textbook look
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{PPGray}}
+  {\thesection}{0.6em}{}
+\titlespacing*{\section}{0pt}{14pt}{8pt}
+
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{PPGray}}
+  {\thesubsection}{0.6em}{}
+\titlespacing*{\subsection}{0pt}{10pt}{6pt}
+
+% --- Headers/footers ---
+\RequirePackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\nouppercase{\leftmark}}
+\fancyhead[R]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% --- Figures/tables ---
+\RequirePackage{graphicx}
+\RequirePackage{caption}
+\captionsetup{
+  font=small,
+  labelfont=bf,
+  textfont=it,
+  labelsep=colon
+}
+
+\RequirePackage{booktabs}
+\RequirePackage{tabularx}
+
+% --- Lists ---
+\RequirePackage{enumitem}
+\setlist{topsep=6pt,itemsep=2pt,parsep=0pt}
+
+% --- ToC formatting ---
+\RequirePackage{tocloft}
+\setlength{\cftbeforechapskip}{6pt}
+
+% --- Index (optional) ---
+\RequirePackage{makeidx}
+\makeindex
+
+% --- Boxes and code ---
+\RequirePackage{ppboxes}
+\RequirePackage{ppcodelistings}
