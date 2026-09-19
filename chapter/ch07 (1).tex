@@ -1,0 +1,58 @@
+\documentclass[11pt]{book}
+
+\usepackage{ppbook}
+
+\begin{document}
+\setcounter{chapter}{6}
+\chapter{Automated Program Repair and Patch Synthesis}
+
+\begin{itemize}
+\item APR basic loop = fault localization + patch synthesis + verification
+\item verification checks if $\forall x.\phi(P,x)$ holds $\rightarrow$ co-NP problem
+\item patch synthesis formula: $\exists y.\forall x.\phi(P\oplus y,x)$ where $y$ is patch and $P$ is buggy code $\rightarrow$ existential 2nd order ($\Sigma_2^p$ complexity)
+\item CEGIS (counterexample guided inductive synthesis) loop:
+\begin{itemize}
+\item start with finite input set $X=\{x_1,x_2,\dots,x_n\}$
+\item solve $\bigwedge \phi(P\oplus y, x_i)$
+\item verifier checks $\exists x.\neg \phi(P\oplus y, x)$
+\item if counterexample $x$ found add it to $X$ and repeat loop
+\end{itemize}
+\item search candidate strategies:
+\begin{itemize}
+\item grammar-based search (like $E ::= age > c \mid age \ge c$, trade-off w/ search space size)
+\item mutation operators: delete, insert, replace
+\item constraint-based synthesis using holes (e.g. $HOLE(x) = \text{if}(x=0):0 \dots$)
+\end{itemize}
+\item patch ranking cost formula: $C = \alpha \cdot \text{LinesChanged} + \beta \cdot \text{Complexity}$
+\item minimal repair assumption $\rightarrow$ fixed code should be close to buggy code so we dont rewrite whole program
+\item multi-line repair search space grows fast: 1 line gives $N$ options, $k$ lines gives $\binom{L}{k}N^k$ options
+\item stateful systems way harder to repair (depends on state, sequence, external calls, exceptions)
+\item fault localization techniques: spectrum-based FL, dynamic slicing, symbolic execution, mutation analysis, LLMs
+\item bugs in LLM generated code (Codex): 57% algorithm errors, 11% syntax errors, 13.4% small fixes, 18.5% large patches
+\item testing APR tools (TBar, Recoder) on Codex bugs:
+\begin{itemize}
+\item 191/335 leetcode bugs were algorithmic misalignment
+\item 45 single-hunk defects
+\item TBar/Recoder solve ~6 easy and ~3 medium problems (uses statistical FL, ignores line dependencies)
+\end{itemize}
+\item codex fixing its own bugs: location guidance ($Codex\text{-}e^{stm}$) gives almost same performance as no location guidance ($Codex\text{-}e^{bug}$)
+\item combining APR + LLM (TBar/Recoder + Codex): extract patch ingredients from both APR patches and multiple Codex generations to fix more programs
+\item infilling-style APR (AlphaRepair): mask buggy line with tokens and use CodeBERT/encoder models to generate replacement
+\item 3 APR settings with LLMs: complete function generation, correct code infilling (prefix + suffix given), single line generation
+\item patch ranking & validation:
+\begin{itemize}
+\item nucleus sampling ($p=0.95, T=0.8$)
+\item record entropy (negative log probability) $\rightarrow$ mean entropy and sum entropy
+\item prioritize patches with lower entropy first
+\end{itemize}
+\item tested on datasets: Defects4J, QuixBugs (Java/Python), ManyBugs
+\item key results:
+\begin{itemize}
+\item increasing model size = higher fix ratio
+\item Codex gives best performance because fine-tuned on code (general text models like GPT-NeoX lag behind)
+\item code infilling gives lower syntax & semantic errors (using suffix context after buggy line helps a lot)
+\item bigger models are much slower for patch generation (up to 71x)
+\end{itemize}
+\end{itemize}
+
+\end{document}

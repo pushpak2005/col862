@@ -1,0 +1,72 @@
+\documentclass[11pt]{book}
+\usepackage{ppbook}
+
+\begin{document}
+\setcounter{chapter}{2}
+\chapter{Symbolic Execution}
+
+\begin{itemize}
+\item how to verify program satisfies requirements: testing, model checking, hoare logic, theorem proving, program analysis
+
+\item testing: uses concrete inputs ($n=0, 5, -1, 20$)
+\item problem with testing: finite inputs checked, pass all tests != true for all inputs
+
+\item symbolic idea: give symbolic val instead of fixed input ($n \rightarrow \alpha_n$)
+\item run program with symbols to check if property can ever fail
+\item example: check $\text{assert}(result \geq 1 \lor n < 0)$ where $n$ is symbolic
+
+\item SEE (Symbolic Execution Engine) tracks execution state as $(\pi, \sigma, pc)$
+\begin{itemize}
+    \item $\pi$ = path constraint (boolean formula for path)
+    \item $\sigma$ = symbolic store ($x \mapsto e_s$, maps vars to symbolic exprs)
+    \item $pc$ = program counter
+\end{itemize}
+
+\item assignments update store: $x := e \implies \sigma[x \mapsto e_s]$
+
+\item branching on $if(e)$: state forks into two
+\begin{itemize}
+    \item true branch: $\pi_t = \pi \land e_s$
+    \item false branch: $\pi_f = \pi \land \neg e_s$
+\end{itemize}
+
+\item path explosion: branches + loops + fn calls = state count becomes too huge quickly
+
+\item solvers: SAT / SMT (Z3, CVC4, STP)
+\begin{itemize}
+    \item SAT = path feasible $\rightarrow$ solver generates concrete test input
+    \item UNSAT = path impossible
+    \item UNKNOWN / timeout
+\end{itemize}
+
+\item SMT supports theories e.g. array theory: $B = \text{Store}(A, 3, 99)$ ($B[3]=99$, other pos $j \neq i \implies B[j] = A[j]$)
+
+\item concolic execution = dynamic symbolic execution (combines concrete + symbolic)
+\item concrete run follows 1 path with concrete store $\sigma_c$
+\item negate one branch condition in path constraint $\rightarrow$ solver gives new concrete input to reach new path
+
+\item external code/calls: source code missing $\rightarrow$ path divergence (concrete run goes different path due to pointers, casts, env, incomplete models)
+
+\item path selection methods: DFS, BFS, Random, KLEE (uses path length + arity), coverage-based search
+
+\item online vs offline executor:
+\begin{itemize}
+    \item online: clones state on branch, fast (no re-execution), high RAM usage
+    \item offline: explores 1 path per run, low RAM usage, re-executes early steps (needs checkpoints)
+\end{itemize}
+
+\item symbolic memory: array index $i$ is symbolic ($a[i]$)
+\item option 1: fork states for possible addresses (can cause explosion)
+\item option 2: address concretization (pick 1 concrete address, simpler but loses precision)
+
+\item ITE expressions: $ITE(c, T, F)$ avoids state forking by encoding choice directly for solver
+
+\item early pruning: check feasibility at branch early, drop UNSAT path constraints (uses unsat cores)
+
+\item summaries: compute function summary $\phi$ relating inputs to outputs, save and reuse
+\item example summary: $\phi_{isPos} = (x > 0 \land ret = 1) \lor (x \leq 0 \land ret = 0)$
+
+\item LLMs for symbolic exec: loop summarization, harness synthesis, path prioritization, modeling external environment / libraries
+\end{itemize}
+
+\end{document}

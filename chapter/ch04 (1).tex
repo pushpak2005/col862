@@ -1,0 +1,49 @@
+\documentclass[11pt]{book}
+
+\usepackage{ppbook}
+
+\begin{document}
+\setcounter{chapter}{3}
+\chapter{LLMs for Invariant Synthesis and Verification}
+
+\begin{itemize}
+\item using LLMs for invariant synthesis (Pei et al ICLR 23)
+\item daikon is dynamic invariant gen, runs program on 200 tests, tracks var values, generates candidate invariants
+\item fine-tune LLM on synthetic java dataset labeled using daikon candidates
+\item predicts invariants at fn entry (preconditions), fn exit (postconditions), loop headers, object/class
+\item 18 invariant types (null checks, comp, arith, array elt_comp, pairwise, cond, etc)
+\item validation of predicted invariants done through static analysis
+\item fine-tuned LLM precision & recall both around 86%
+\item scratchpad and oracle prompting worked better than direct prompting
+\item daikon F1 score depends on number of traces (bad with few traces, reaches 1.0 at 200 traces)
+\item fine-tuned LLMs get ~0.85 F1 score even without execution traces
+\item zero shot GPT-4 without prompt adaptation gives low precision 0.44 and recall 0.38
+\item LLMs can discover new invariants that daikon missed
+
+```
+\item LEMUR framework (ICLR 24) integrates LLM with verifier (ESBMC k-induction)
+\item verifier state configuration represented as $(P, A, M)$
+\begin{itemize}
+    \item $P$ = program
+    \item $A$ = assumption set $\{q\}$
+    \item $M$ = proof goals list $[p]$
+\end{itemize}
+\item calculus of operations / transition rules:
+\begin{itemize}
+    \item Propose: $O_{propose}$ proposes new assumption $q$ that implies proof goal $p$
+    \item Repair 1: if verifier returns UNKNOWN, $O_{repair}$ strengthens or corrects $q$
+    \item Repair 2: if assumption $q$ falsified (FALSE) by verifier, $O_{repair}$ fixes it
+    \item Decide: if $q \implies p$ verified TRUE, $q$ becomes the new proof goal
+    \item Backtrack: revert to prior proof goal, try different assumption $q'$
+    \item Success / Fail: termination rules when proof target proven or falsified
+\end{itemize}
+\item soundness theorem: if SUCCESS reached then $p_0$ is guaranteed invariant on $P$
+\item results on Code2Inv: LEMUR solved 107 vs Code2Inv 92 vs ESBMC 68
+\item results on SV-COMP: LEMUR solved 26 vs UAutomizer 0 vs ESBMC 0
+\item average proposals needed ~4.7 to 9.1 attempts to find correct invariant
+
+
+
+\end{itemize}
+
+\end{document}

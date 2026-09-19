@@ -1,0 +1,58 @@
+\documentclass[11pt]{book}
+
+\usepackage{ppbook}
+
+\begin{document}
+\setcounter{chapter}{5}
+\chapter{Automated Program Repair and Patch Synthesis}
+
+\begin{itemize}
+\item APR loop = fault localization + patch synthesis + verification
+
+```
+\item verification checks if $\forall x.\phi(P,x)$ holds $\rightarrow$ co-NP problem[cite: 4]
+
+\item patch synth checks $\exists y.\forall x.\phi(P\oplus y,x)$ where $y$ is patch and $P$ is buggy code $\rightarrow$ existential 2nd order ($\Sigma_2^p$ complexity)[cite: 4]
+
+\item CEGIS (counterexample guided inductive synthesis) decomposes problem over finite input set $X=\{x_1,x_2,\dots,x_n\}$[cite: 4]
+\begin{itemize}
+    \item solve $\bigwedge \phi(P\oplus y, x_i)$[cite: 4]
+    \item verifier checks $\exists x.\neg \phi(P\oplus y, x)$[cite: 4]
+    \item if counterexample $x$ found add to $X$ and repeat loop[cite: 4]
+\end{itemize}
+
+\item patch candidate search strategies:
+\begin{itemize}
+    \item grammar-based search (defined expression grammar e.g. $E ::= age > c \mid age \ge c$, trade-off w/ search space size)[cite: 4]
+    \item mutation operators: delete, insert, replace[cite: 4]
+    \item constraint-based synthesis using holes (e.g. $HOLE(x) = \text{if}(x=0):0 \dots$)[cite: 4]
+\end{itemize}
+
+\item ranking patches: cost function $C = \alpha \cdot \text{LinesChanged} + \beta \cdot \text{Complexity}$[cite: 4]
+
+\item minimal repair assumption: fixed code should be close to buggy code so we dont rewrite entire program[cite: 4]
+
+\item multi-line repair search space: 1 line gives $N$ options, $k$ lines gives $\binom{L}{k}N^k$ options[cite: 4]
+
+\item stateful systems harder to repair (depends on state, sequence, ext calls, exceptions)[cite: 4]
+
+\item fault localization techniques: find suspicious statements via spectrum-based FL, dynamic slicing, symbolic execution, mutation analysis, LLMs[cite: 4]
+
+\item bugs in LLM generated code (Codex): 57\% algorithm errors, 11\% syntax errors, 13.4\% small fixes needed, 18.5\% large patches[cite: 4]
+
+\item testing APR tools (TBar, Recoder) on codex bugs:
+\begin{itemize}
+    \item 191/335 leetcode bugs were algorithmic misalignment[cite: 4]
+    \item 45 single-hunk defects[cite: 4]
+    \item TBar/Recoder solve ~6 easy and ~3 medium problems (uses statistical FL, ignores line dependencies)[cite: 4]
+\end{itemize}
+
+\item codex fixing its own bugs: location guidance ($Codex\text{-}e^{stm}$) gives almost same performance as no location guidance ($Codex\text{-}e^{bug}$)[cite: 4]
+
+\item combining APR + LLM (TBar/Recoder + Codex): extract patch ingredients from both APR patches and multiple codex generations to fix more incorrect programs[cite: 4]
+
+```
+
+\end{itemize}
+
+\end{document}

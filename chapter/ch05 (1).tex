@@ -1,0 +1,40 @@
+\documentclass[11pt]{book}
+
+\usepackage{ppbook}
+
+\begin{document}
+\setcounter{chapter}{4}
+\chapter{LLMs for Specification Synthesis}
+
+\begin{itemize}
+\item llm problems: makes errors, loses attention in middle of long context, autoregressive errors pile up
+\item main idea: use llm to propose candidate specs, static analysis + fv to check/verify
+
+```
+\item AutoSpec (CAV 2024):
+\begin{itemize}
+    \item breaks program into call graph / inter-procedural CFG
+    \item bottom-up spec gen (must do callees before callers)
+    \item avoids context fragmentation
+    \item uses Frama-C for checking specs
+    \item nested loops: legality checked immediately, satisfiability postponed till outermost loop
+    \item few-shot prompting gives big improvement
+    \item handles complex real world code like X509 parser
+\end{itemize}
+
+\item SpecGen (ICSE 2025):
+\begin{itemize}
+    \item 2 phases: conversation-driven synthesis + mutation-based spec gen
+    \item phase 1: prompt with few-shot examples, pass verifier failure feedback back into llm loop
+    \item limits long error logs by summarizing failure guidance (1 error per attempt)
+    \item phase 2: if llm output fails verification, apply mutation operators on failing specs
+    \item mutations: predicative ($\forall \leftrightarrow \exists$), logical ($\&\& \leftrightarrow \vert{}\vert{}$), comparative ($< \leftrightarrow \le$), arithmetic ($+ \leftrightarrow -$)
+    \item heuristic function ranks mutated specs to pick best candidates for verification
+    \item solved 279/385 on SV-COMP Java benchmark (better than AutoSpec 247)
+\end{itemize}
+
+
+
+\end{itemize}
+
+\end{document}

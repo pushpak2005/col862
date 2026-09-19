@@ -1,0 +1,151 @@
+\documentclass[11pt]{book}
+\usepackage{ppbook}
+
+\begin{document}
+
+% Sets the chapter counter so the next chapter is Chapter 2
+\setcounter{chapter}{1}
+
+\chapter{Invariants, Conditions, and Automated Reasoning via Dafny}
+
+\begin{itemize}
+    \item Precondition: condition that must hold right before code block executes. Responsibility of the \emph{caller}.
+    \item If caller violates precondition $\to$ system goes into invalid state, garbage output, or security exploit.
+    \item Real bug example: Nomad bridge hack (\$190M stolen).
+    \begin{itemize}
+        \item In bridge contract, storage had \texttt{confirmAt[0] = 1} set accidentally during initialization.
+        \item Attacker submitted a completely fabricated message \texttt{fakeMsg}.
+        \item Execution path caused Merkle tree lookup to fail and return root as \texttt{0}.
+        \item Precondition check was just \texttt{confirmAt[\_root] != 0}. Since root was 0, it checked \texttt{confirmAt[0] != 0}, which evaluated to true!
+        \item Contract paid out funds to attacker because precondition passed trivially.
+        \item Required patch was fixing precondition to: \texttt{\_root != 0 \&\& confirmAt[\_root] > 0}.
+    \end{itemize}
+\end{itemize}
+
+\begin{ppprogram}{Nomad bridge bug pattern (Solidity)}{lst:nomad}
+\begin{lstlisting}[language=C]
+// Vulnerable check
+function acceptableRoot(bytes32 _root) public view returns (bool) {
+    return confirmAt[_root] != 0; // if confirmAt[0] == 1, root 0 passes!
+}
+
+// Fixed check: caller must ensure root is non-zero
+function acceptableRootFixed(bytes32 _root) public view returns (bool) {
+    return (_root != 0 && confirmAt[_root] > 0);
+}
+\end{lstlisting}
+\end{ppprogram}
+
+\begin{itemize}
+    \item Postcondition: predicate that must hold immediately after code finishes running. Responsibility of the \emph{callee}.
+    
+    \item Hoare Triple: $\{P\} \; C \; \{Q\}$
+    \begin{itemize}
+        \item If precondition $P$ holds before running command $C$, and $C$ terminates, postcondition $Q$ will hold.
+        \item Example: $\{x > 0\} \; x := x * 2 \; \{x \pmod 2 = 0\}$.
+    \end{itemize}
+
+    \item Strongest Postcondition ($sp$): tightest possible bound on output state after executing $C$.
+    \begin{itemize}
+        \item For $\{x > 2\} \; x := x * 2 \; \{x \pmod 2 = 0\}$, the postcondition is valid, but loose.
+        \item Strongest postcondition here is $\{x > 4 \land x \pmod 2 = 0\}$.
+        \item For any valid postcondition $Q$, $sp \implies Q$.
+    \end{itemize}
+
+    \item Weakest Precondition ($WP$): least restrictive initial condition guaranteeing termination in a state satisfying $Q$.
+    \begin{itemize}
+        \item Computed via backward reasoning from postcondition $Q$ through statements.
+        \item Example: $\{P\} \; x := x + 5 \; \{x > 15\}$. Substituting gives $x + 5 > 15 \implies x > 10$. So $WP = \{x > 10\}$.
+        \item Any valid precondition $P$ must be at least as strong: $P \implies WP$.
+    \end{itemize}
+
+    \item Standard Dijkstra WP rules (this is what Dafny computes internally):
+    \begin{itemize}
+        \item $wp(\text{skip}, Q) \equiv Q$
+        \item $wp(\text{abort}, Q) \equiv \text{false}$
+        \item $wp(x := E, Q) \equiv Q[x \mapsto E]$ (substitute $x$ with $E$ in $Q$)
+        \item $wp(S_1; S_2, Q) \equiv wp(S_1, wp(S_2, Q))$
+        \item $wp(\text{if } B \text{ then } S_1 \text{ else } S_2, Q) \equiv (B \implies wp(S_1, Q)) \land (\neg B \implies wp(S_2, Q))$
+        \item $wp(\text{while } B \text{ do } S, Q)$ with invariant $I$:
+        \[
+        I \land \forall \text{vars}. \big((I \land B \implies wp(S, I)) \land (I \land \neg B \implies Q)\big)
+        \]
+    \end{itemize}
+
+    \item Loop Invariants: property $I$ holding at loop boundaries (before loop, at start of every iteration, and right after loop exits).
+    \begin{itemize}
+        \item Initialization: $P \implies I$ (must hold before iteration 1).
+        \item Preservation: $I \land B \land \text{Body} \implies I'$ (one step preserves invariant).
+        \item Exit: $I \land \neg B \implies Q$ (invariant plus loop condition failing must imply postcondition).
+    \end{itemize}
+\end{itemize}
+
+\begin{ppprogram}{Dafny Example 1: Twice with Invariants}{lst:twice}
+\begin{lstlisting}
+method Twice(n: nat) returns (x: nat, y: nat)
+  ensures x == n
+  ensures y == 2 * n
+{
+  x := 0;
+  y := 0;
+  while x < n
+    invariant 0 <= x <= n
+    invariant y == 2 * x
+  {
+    x := x + 1;
+    y := y + 2;
+  }
+}
+\end{lstlisting}
+\end{ppprogram}
+
+\begin{itemize}
+    \item Without \texttt{invariant y == 2 * x} and \texttt{0 <= x <= n}, Dafny refuses to verify because it forgets what happened in previous loop iterations and only knows the invariant on loop exit.
+\end{itemize}
+
+\begin{ppprogram}{Dafny Example 2: Euclidean GCD and Termination}{lst:gcd}
+\begin{lstlisting}
+ghost function Gcd(a: nat, b: nat): nat
+  decreases b
+{
+  if b == 0 then a else Gcd(b, a % b)
+}
+
+method ComputeGcd(a: nat, b: nat) returns (res: nat)
+  requires a > 0 || b > 0
+  ensures res == Gcd(a, b)
+{
+  var x := a;
+  var y := b;
+
+  while y != 0
+    invariant Gcd(x, y) == Gcd(a, b)
+    decreases y
+  {
+    var temp := y;
+    y := x % y;
+    x := temp;
+  }
+  return x;
+}
+\end{lstlisting}
+\end{ppprogram}
+
+\begin{itemize}
+    \item In the GCD method:
+    \begin{itemize}
+        \item Invariant needed: \texttt{Gcd(x, y) == Gcd(a, b)}. When loop finishes ($y == 0$), \texttt{Gcd(x, 0) == x}, so output equals \texttt{Gcd(a, b)}.
+        \item Termination / variant: \texttt{decreases y}. Since remainder $x \pmod y < y$, $y$ strictly decreases down towards 0 under a well-founded relation on naturals.
+    \end{itemize}
+
+    \item How Dafny works under the hood:
+    \begin{itemize}
+        \item Dafny takes code + specs and generates Verification Conditions (VCs) using WP rules.
+        \item Passes the \emph{negation} of the VC ($\neg \text{VC}$) to Z3 (SMT solver).
+        \item If Z3 returns \textbf{UNSAT}: no counterexample exists to the negation, meaning the original VC is valid (code verified!).
+        \item If Z3 returns \textbf{SAT}: found an assignment where negation is true, meaning counterexample exists (verification failed / bug).
+        \item If Z3 returns \textbf{UNKNOWN}: solver timed out or hit undecidable logic.
+    \end{itemize}
+\end{itemize}
+
+\end{document}
