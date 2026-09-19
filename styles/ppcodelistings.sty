@@ -1,0 +1,61 @@
+% styles/ppcodelistings.sty
+\ProvidesPackage{ppcodelistings}[2026/01/26 Code listings]
+
+\RequirePackage{listings}
+\RequirePackage{caption}
+
+% Listings setup
+\lstdefinestyle{ppcode}{
+  basicstyle=\ttfamily\small,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  breaklines=true,
+  frame=single,
+  rulecolor=\color{PPGray},
+  framerule=0.4pt,
+  xleftmargin=0.6em,
+  xrightmargin=0.2em,
+  aboveskip=8pt,
+  belowskip=8pt
+}
+
+\lstset{style=ppcode}
+
+% Common languages (extend as needed)
+\lstdefinelanguage{C11}{
+  language=C,
+  morekeywords={_Atomic,_Thread_local,_Generic,static_assert,alignas,alignof}
+}
+\lstdefinelanguage{OpenMP}{
+  language=C,
+  morekeywords={pragma,omp,parallel,for,sections,section,single,critical,atomic,
+    barrier,task,taskwait,simd,collapse,default,shared,private,reduction,
+    schedule,nowait,master}
+}
+\lstdefinelanguage{MPI}{
+  language=C,
+  morekeywords={MPI_Init,MPI_Finalize,MPI_Comm_size,MPI_Comm_rank,MPI_Send,MPI_Recv,
+    MPI_Bcast,MPI_Reduce,MPI_Allreduce,MPI_Barrier,MPI_Scatter,MPI_Gather,
+    MPI_Isend,MPI_Irecv,MPI_Wait,MPI_Test}
+}
+
+% Program caption name
+\DeclareCaptionType{program}[Program][List of Programs]
+
+% Convenient wrappers
+\newcommand{\ppinline}[1]{\texttt{#1}}
+
+% Code listing with a Program caption
+% Usage:
+% \begin{ppprogram}{Title}{lst:label}
+% \begin{lstlisting}[language=OpenMP]
+% ...
+% \end{lstlisting}
+% \end{ppprogram}
+\newenvironment{ppprogram}[2]{%
+  \captionsetup{type=program}%
+  \captionof{program}{#1}\label{#2}\vspace{-4pt}%
+}{%
+  \vspace{-2pt}%
+}

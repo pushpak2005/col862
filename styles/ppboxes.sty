@@ -1,0 +1,47 @@
+% styles/ppboxes.sty
+\ProvidesPackage{ppboxes}[2026/01/26 Boxed environments]
+
+\RequirePackage[most]{tcolorbox}
+\tcbuselibrary{breakable,skins,documentation}
+
+% Base style used by all boxes
+\tcbset{
+  ppbox/.style={
+    enhanced,
+    breakable,
+    colback=PPLight,
+    colframe=PPBlue,
+    boxrule=0.7pt,
+    arc=2.5mm,
+    left=10pt,right=10pt,top=8pt,bottom=8pt,
+    before skip=10pt, after skip=10pt,
+    fonttitle=\bfseries,
+    coltitle=black,
+    attach title to upper,
+    title={#1}
+  }
+}
+
+% Different “semantic” boxes
+\newtcolorbox{ppnote}[1][]{ppbox={Note}, colframe=PPBlue, #1}
+\newtcolorbox{ppkey}[1][]{ppbox={Key Idea}, colframe=PPGood, #1}
+\newtcolorbox{pppitfall}[1][]{ppbox={Pitfall}, colframe=PPWarn, #1}
+\newtcolorbox{ppexample}[1][]{ppbox={Example}, colframe=PPGray, #1}
+\newtcolorbox{ppdefn}[1][]{ppbox={Definition}, colframe=PPBlue, #1}
+
+% Exercise block + per-chapter numbering
+\newcounter{ppexcounter}[chapter]
+\renewcommand{\theppexcounter}{\thechapter.\arabic{ppexcounter}}
+
+\newtcolorbox{ppexercises}[1][]{%
+  ppbox={Exercises}, colframe=PPGray, #1
+}
+
+\newcommand{\ppexercise}[1]{%
+  \refstepcounter{ppexcounter}%
+  \par\noindent\textbf{Exercise \theppexcounter.} #1\par
+}
+
+% Short “inline emphasis” commands
+\newcommand{\ppterm}[1]{\textbf{\color{PPBlue}#1}}
+\newcommand{\ppemph}[1]{\textbf{#1}}
